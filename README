@@ -1,0 +1,24 @@
+This is a simple script to simplify a basic amount of verification for the
+DNSSEC root keys.
+
+It requires:
+	* wget
+	* gpg
+	* dig
+	* dnssec-dsfromkey
+
+This script does the following:
+	* Downloads (using https) the following:
+		* root-anchors.xml file from IANA.
+		* The (detached) GPG signature for root-anchors.xml
+	* Imports the icann PGP keychain (DNSSEC Manager <dnssec@iana.org>)
+	* Verifies the GPG signature of root-anchors.xml
+	
+	* Obtains the GPG key via DNS using dig
+	* Compares the key obtained via DNS with the key obtained with https.
+	* Prints the results
+
+At this time, there is no checking to see if the various tools actually exist;
+therefore, it can easily fail to run properly.
+
+This script has been tested on Linux
