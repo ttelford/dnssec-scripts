@@ -9,23 +9,31 @@ cd ${TMPDIR}
 # We use https:// for an additional layer of authentication - as https:// uses
 # x.509 certificates.
 
-wget https://data.iana.org/root-anchors/root-anchors.asc https://data.iana.org/root-anchors/root-anchors.xml https://data.iana.org/root-anchors/icann.pgp
 
-# Import the GPG key obtained
-echo "Importing IANA/ICANN GPG key (DNSSEC Manager <dnssec@iana.org>)"
-gpg --import icann.pgp
+# PGP has been discontinued...
+#wget https://data.iana.org/root-anchors/root-anchors.asc https://data.iana.org/root-anchors/root-anchors.xml https://data.iana.org/root-anchors/icann.pgp
 
-# Verify the signature
-echo "Verifying GPG signature"
-gpg --verify root-anchors.asc root-anchors.xml
+## Import the GPG key obtained
+#echo "Importing IANA/ICANN GPG key (DNSSEC Manager <dnssec@iana.org>)"
+#gpg --import icann.pgp
+#
+## Verify the signature
+#echo "Verifying GPG signature"
+#gpg --verify root-anchors.asc root-anchors.xml
+
+
+wget https://data.iana.org/root-anchors/root-anchors.xml http://data.iana.org/root-anchors/root-anchors.p7s http://data.iana.org/root-anchors/icannbundle.pem
+
+openssl smime -verify -binary -inform DER -in root-anchors.p7s -content root-anchors.xml -CAfile icannbundle.pem
 
 echo "Obtaining key via DNS"
 # Via DNS:
-dig . dnskey | grep "IN	DNSKEY	257 3 8" > root_dnskey
+#dig . dnskey | grep "IN	DNSKEY	257 3 8" > root_dnskey
+delv . dnskey | grep "IN	DNSKEY	257 3 8" > root_dnskey
 /usr/sbin/dnssec-dsfromkey -2 -f root_dnskey . > DSrecord
 
 #Now to compare the two:
-XMLKEY=$(cat root-anchors.xml | grep \<Digest\> | sed -e "s@<Digest>@@" | sed -e "s@</Digest>@@")
+XMLKEY=$(cat root-anchors.xml | grep \<Digest\> | tail -n1 | sed -e "s@<Digest>@@" | sed -e "s@</Digest>@@")
 DNSKEY=$(cat DSrecord | awk '{print $7$8}')
 
 echo "Key obtained via IANA https:	${XMLKEY}"
